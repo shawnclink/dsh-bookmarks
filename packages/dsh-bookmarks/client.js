@@ -182,6 +182,9 @@ window.__ModuleLoader__.load({
 .bm-icon-btn:hover{background:rgba(24,26,32,.9); transform:translateY(-1px); border-color:rgba(255,255,255,.34);}
 .bm-icon-btn.on{background:var(--dsw-alias-brand-primary, #4d7cff); border-color:transparent;}
 
+/* 宿主有全局 a 重置，但预览环境/其它主题不一定有，自己兜一层，别让标题变蓝。 */
+.bm-root a{color:inherit; text-decoration:none;}
+
 .bm-card-title{
   margin-top:9px; font-size:13.5px; line-height:1.46; font-weight:520; letter-spacing:-.1px;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
@@ -219,6 +222,74 @@ window.__ModuleLoader__.load({
 }
 .bm-exit:hover{color:var(--dsw-alias-label-primary, #e9ebef); background:var(--dsw-alias-bg-layer-2, #26282d);}
 
+.bm-exportbar{
+  display:flex; align-items:center; gap:9px; font-size:12px; color:var(--dsw-alias-label-secondary, #9aa0aa);
+  border:1px solid var(--dsw-alias-border-l1, #2f3136); border-radius:9px; padding:6px 10px; margin:0 0 12px;
+}
+.bm-review{display:flex; flex-direction:column; gap:22px;}
+.bm-stats{display:flex; gap:12px; flex-wrap:wrap;}
+.bm-stat{
+  flex:1 1 180px; border:1px solid var(--dsw-alias-border-l1, #2f3136); border-radius:12px;
+  padding:13px 16px; background:var(--dsw-alias-bg-layer-1, #1e2024);
+}
+.bm-stat .n{font-size:24px; font-weight:700; letter-spacing:-.02em;}
+.bm-stat .l{font-size:12px; color:var(--dsw-alias-label-secondary, #9aa0aa); margin-top:2px;}
+.bm-today{display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:12px;}
+.bm-today-card{
+  border:1px solid var(--dsw-alias-border-l1, #2f3136); border-radius:12px; overflow:hidden;
+  background:var(--dsw-alias-bg-layer-1, #1e2024); display:flex; flex-direction:column;
+}
+.bm-today-card img{width:100%; aspect-ratio:16/9; object-fit:cover; display:block;}
+.bm-today-card .body{padding:11px 13px 13px; display:flex; flex-direction:column; gap:8px; flex:1;}
+.bm-today-card h4{display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;}
+.bm-today-card h4{margin:0; font-size:13.5px; line-height:1.45; font-weight:600;}
+.bm-today-card .acts{display:flex; gap:7px; margin-top:2px;}
+.bm-sec-h{display:flex; align-items:baseline; gap:10px; margin:0 0 10px;}
+.bm-sec-h h3{margin:0; font-size:14px; font-weight:650;}
+.bm-sec-h span{font-size:12px; color:var(--dsw-alias-label-secondary, #9aa0aa);}
+.bm-stale{display:flex; flex-direction:column; gap:6px;}
+.bm-stale-row{
+  display:flex; gap:10px; align-items:center; padding:8px 10px; border-radius:9px;
+  background:var(--dsw-alias-bg-layer-1, #1e2024); font-size:13px;
+}
+.bm-stale-row a{color:inherit; text-decoration:none; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.bm-stale-row .age{font-size:11.5px; color:var(--dsw-alias-state-warn-primary, #d9a441); flex:none;}
+.bm-roles{display:grid; grid-template-columns:repeat(auto-fill, minmax(360px, 1fr)); gap:14px;}
+.bm-role{
+  border:1px solid var(--dsw-alias-border-l1, #2f3136); border-radius:12px; padding:14px 16px;
+  background:var(--dsw-alias-bg-layer-1, #1e2024); display:flex; flex-direction:column; gap:9px;
+}
+.bm-role-top{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--dsw-alias-label-secondary, #9aa0aa);}
+.bm-role input, .bm-role select{
+  width:100%; background:var(--dsw-alias-bg-base, #17181b); color:var(--dsw-alias-label-primary, #e9ebef);
+  border:1px solid var(--dsw-alias-border-l1, #2f3136); border-radius:8px; padding:7px 10px;
+  font-size:13px; font-family:inherit; outline:none;
+}
+.bm-role input:focus, .bm-role select:focus{border-color:var(--dsw-alias-brand-primary, #4d7cff);}
+.bm-role .nm{font-weight:650; font-size:14.5px;}
+.bm-role .row{display:flex; gap:9px; align-items:center;}
+.bm-role .row .lbl{font-size:11.5px; color:var(--dsw-alias-label-secondary, #9aa0aa); width:58px; flex:none;}
+.bm-role-hint{font-size:12px; color:var(--dsw-alias-label-secondary, #9aa0aa); margin:0 0 16px;}
+.bm-menu{
+  position:fixed; z-index:70; min-width:196px; padding:5px;
+  background:var(--dsw-alias-bg-overlay, #2c2e34); border:1px solid var(--dsw-alias-border-l2, #3b3e45);
+  border-radius:10px; box-shadow:0 14px 40px -12px rgba(0,0,0,.65);
+  animation:bm-in .12s ease-out;
+}
+.bm-menu .head{
+  padding:6px 9px 8px; font-size:11.5px; color:var(--dsw-alias-label-secondary, #9aa0aa);
+  line-height:1.45; max-width:240px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+}
+.bm-menu button{
+  display:flex; align-items:center; gap:8px; width:100%; text-align:left; border:0; background:transparent;
+  color:var(--dsw-alias-label-primary, #e9ebef); font-family:inherit; font-size:12.5px;
+  padding:7px 9px; border-radius:7px; cursor:pointer;
+}
+.bm-menu button:hover{background:var(--dsw-alias-bg-layer-2, #26282d);}
+.bm-menu button .hint{margin-left:auto; font-size:11px; opacity:.45;}
+.bm-menu .sep{height:1px; margin:4px 6px; background:var(--dsw-alias-border-l1, #2f3136);}
+.bm-menu-backdrop{position:fixed; inset:0; z-index:65;}
 .bm-empty{
   border:1px dashed var(--dsw-alias-border-l2, #3b3e45); border-radius:14px; padding:56px 24px; text-align:center;
   color:var(--dsw-alias-label-secondary, #9aa0aa); font-size:13px; line-height:1.9;
@@ -324,6 +395,20 @@ window.__ModuleLoader__.load({
       }
     }
 
+    // 交互自检：退出这类“点了没反应”的问题，光看代码看不出来，让客户端
+    // 把动作结果直接报回宿主，curl /diag 一眼就知道点没点到、值改没改。
+    function reportAction(payload) {
+      try {
+        fetch(`${API}/diag`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ ...payload, at: new Date().toISOString() }),
+        }).catch(() => {});
+      } catch (error) {
+        console.error('[bookmarks] reportAction 失败', error);
+      }
+    }
+
     // 渲染侧自检：把“样式到底生效没有”报回宿主，宿主侧 curl 一眼就能看到，
     // 不用靠人截图猜。
     let diagSent = false;
@@ -378,7 +463,14 @@ window.__ModuleLoader__.load({
         grid: [h('rect', { key: 'a', x: 3, y: 3, width: 7, height: 7, rx: 1.5 }), h('rect', { key: 'b', x: 14, y: 3, width: 7, height: 7, rx: 1.5 }), h('rect', { key: 'c', x: 3, y: 14, width: 7, height: 7, rx: 1.5 }), h('rect', { key: 'd', x: 14, y: 14, width: 7, height: 7, rx: 1.5 })],
         doc: [h('path', { key: 'a', d: 'M14 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7z' }), h('path', { key: 'b', d: 'M14 3v4h4' }), h('path', { key: 'c', d: 'M9 12h6' }), h('path', { key: 'd', d: 'M9 16h4' })],
         play: [h('path', { key: 'a', d: 'M8 5.5v13l11-6.5z', fill: 'currentColor', stroke: 'none' })],
+        link: [h('path', { key: 'a', d: 'M10 13a5 5 0 0 0 7.1 0l2.4-2.4a5 5 0 0 0-7.1-7.1L11 4.9' }), h('path', { key: 'b', d: 'M14 11a5 5 0 0 0-7.1 0l-2.4 2.4a5 5 0 0 0 7.1 7.1L13 19' })],
         bookmark: [h('path', { key: 'a', d: 'M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z' })],
+        back: [h('path', { key: 'a', d: 'M15 5l-7 7 7 7' })],
+        download: [
+          h('path', { key: 'a', d: 'M12 4v10' }),
+          h('path', { key: 'b', d: 'M8 10l4 4 4-4' }),
+          h('path', { key: 'c', d: 'M5 18h14' }),
+        ],
       };
       return h('svg', { ...common, 'aria-hidden': 'true' }, paths[name] || []);
     }
@@ -585,7 +677,21 @@ window.__ModuleLoader__.load({
       const textOnly = !item.cover || brokenCover;
       return h(
         'article',
-        { className: `bm-card${textOnly ? ' text-only' : ''}${item.status === 'done' ? ' done' : ''}` },
+        {
+          className: `bm-card${textOnly ? ' text-only' : ''}${item.status === 'done' ? ' done' : ''}`,
+          onContextMenu: (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            props.onMenu(item, event.clientX, event.clientY);
+          },
+          // 单击卡片任意空白处 = 打开原文；带交互的元素（链接、按钮、输入框）自己处理。
+          onClick: (event) => {
+            const target = event.target;
+            if (target && target.closest && target.closest('a,button,input,textarea')) return;
+            window.open(item.url, '_blank', 'noreferrer');
+          },
+          style: { cursor: 'pointer' },
+        },
         h(Thumb, {
           item,
           onToggleDone: props.onToggleDone,
@@ -596,10 +702,12 @@ window.__ModuleLoader__.load({
         textOnly
           ? null
           : h(
-              'div',
+              'a',
               {
                 className: 'bm-card-title',
-                onClick: () => props.onOpen(item),
+                href: item.url,
+                target: '_blank',
+                rel: 'noreferrer',
                 title: item.title,
               },
               cleanText(item.title) || linkHost(item.title) || textOf(item) || '（无标题）',
@@ -628,6 +736,25 @@ window.__ModuleLoader__.load({
         setTags((item.tags || []).join(', '));
       }, [item.id]);
 
+      const post = async (path, target) => {
+        {
+          try {
+            const response = await fetch(`${API}${path}`, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ ids: [target.id] }),
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || result.ok === false) {
+              throw new Error((result.errors && result.errors[0]) || result.error || '失败');
+            }
+            props.toast(path === '/remind' ? '已加进提醒事项' : '已排进明天 20:00 的日历');
+          } catch (error) {
+            props.toast(`没成功：${error.message}`);
+          }
+        }
+      };
+
       const status = item.status || 'inbox';
       const save = async (patch) => {
         setBusy(true);
@@ -645,6 +772,7 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'bm-sheet-head' },
           h('span', { className: 'bm-tag' }, platform.label),
+          props.role ? h('span', { className: 'bm-tag' }, props.role) : null,
           h('span', { className: 'bm-tag' }, item.folder || platform.home || ''),
           h('div', { style: { flex: 1 } }),
           h('button', { className: 'bm-btn ghost', onClick: onClose, title: '关闭 (Esc)' }, icon('close', 15)),
@@ -713,6 +841,8 @@ window.__ModuleLoader__.load({
             'div',
             { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
             h('a', { className: 'bm-btn', href: item.url, target: '_blank', rel: 'noreferrer' }, icon('external', 13), '打开原文'),
+            h('button', { className: 'bm-btn', onClick: () => post('/remind', item) }, '加提醒'),
+            h('button', { className: 'bm-btn', onClick: () => post('/calendar', item) }, '排进日历'),
             h(
               'button',
               {
@@ -863,15 +993,202 @@ window.__ModuleLoader__.load({
     }
 
     // ------------------------------------------------------------ 主页面
+
+
+    // 右键菜单：单击卡片 = 打开原文，右键才出这套动作。
+    function ContextMenu(props) {
+      const { menu, onClose, onAction } = props;
+      const item = menu.item;
+      const width = 208;
+      const left = Math.min(menu.x, (window.innerWidth || 1200) - width - 8);
+      const top = Math.min(menu.y, (window.innerHeight || 800) - 268);
+      const action = (name, patch) => () => {
+        onAction(name, item, patch);
+        onClose();
+      };
+      const done = item.status === 'done';
+      return h(React.Fragment, null,
+        h('div', { className: 'bm-menu-backdrop', onClick: onClose, onContextMenu: (e) => { e.preventDefault(); onClose(); } }),
+        h('div', { className: 'bm-menu', style: { left: Math.max(8, left), top: Math.max(8, top) }, onContextMenu: (e) => e.preventDefault() },
+          h('div', { className: 'head' }, cleanText(item.title) || linkHost(item.title) || '（无标题）'),
+          h('button', { onClick: action('open') }, icon('external', 13), '打开原文', h('span', { className: 'hint' }, '单击卡片同效')),
+          h('button', { onClick: action('detail') }, icon('doc', 13), '详情 / 备注 / 标签'),
+          h('div', { className: 'sep' }),
+          h('button', { onClick: action('toggleDone') }, icon('check', 13), done ? '标记为待看' : '标记看完'),
+          h('button', { onClick: action('archive') }, icon('bookmark', 13), item.status === 'archived' ? '移出归档' : '归档'),
+          h('button', { onClick: action('pin') }, icon('pin', 13), item.pinned ? '取消置顶' : '置顶'),
+          h('div', { className: 'sep' }),
+          h('button', { onClick: action('copy') }, icon('link', 13), '复制链接')));
+    }
+
+    // 平台角色：每个平台在这个人这里是什么用途。这层不是标签，后面
+    // 提炼模板、输出位置、评分权重都挂在它上面。
+    const INTENSITY = [
+      { id: 'light', label: '轻量' },
+      { id: 'standard', label: '标准' },
+      { id: 'deep', label: '深度' },
+    ];
+
+
+    // 复利页：不看你“存了什么”，只看你“还没动什么”。收藏的价值在回流，
+    // 不在数量。
+    function ReviewPage(props) {
+      const { items, roles, onOpen, onPatch, onRemind, onExport } = props;
+      const now = Date.now();
+      const roleOf = (platformId) => (roles[platformId] && roles[platformId].name) || (BY_ID[platformId] ? BY_ID[platformId].label : platformId);
+      const ageOf = (item) => now - new Date(item.savedAt || item.firstSeen || 0).getTime();
+      const inbox = items.filter((item) => (item.status || 'inbox') === 'inbox');
+      const stale = inbox.filter((item) => ageOf(item) > 30 * 864e5).sort((a, b) => ageOf(b) - ageOf(a));
+      const empty = inbox.filter((item) => !cleanText(item.title).trim() && !cleanText(item.excerpt).trim());
+
+      // 每天固定三条：同一天刷新也是同一批，不让人反复挑。
+      const today = React.useMemo(() => {
+        const seed = new Date().toISOString().slice(0, 10);
+        let hash = 7;
+        for (const char of seed) hash = (hash * 31 + char.charCodeAt(0)) % 99991;
+        // 今天这三条要“能读”：没标题又没摘要的纯链接先排除，它们归 5 秒法则那栏。
+        const readable = inbox.filter((item) => (cleanText(item.title) || cleanText(item.excerpt) || '').trim().length > 8);
+        const pool = readable.sort((a, b) => (b.cover ? 1 : 0) - (a.cover ? 1 : 0) || ageOf(b) - ageOf(a));
+        const picked = [];
+        const used = new Set();
+        for (let step = 0; step < pool.length && picked.length < 3; step += 1) {
+          const index = (hash + step * 37) % pool.length;
+          const item = pool[index];
+          if (used.has(item.id)) continue;
+          used.add(item.id);
+          picked.push(item);
+        }
+        return picked;
+      }, [items]);
+
+      const backlog = React.useMemo(() => {
+        const map = new Map();
+        for (const item of inbox) {
+          const role = roleOf(item.platform);
+          const entry = map.get(role) || { role, count: 0, oldest: null };
+          entry.count += 1;
+          const time = new Date(item.savedAt || item.firstSeen || 0).getTime();
+          if (!entry.oldest || time < entry.oldest) entry.oldest = time;
+          map.set(role, entry);
+        }
+        return [...map.values()].sort((a, b) => b.count - a.count);
+      }, [items, roles]);
+
+      return h('div', { className: 'bm-review' },
+        h('div', { className: 'bm-stats' },
+          h('div', { className: 'bm-stat' }, h('div', { className: 'n' }, inbox.length), h('div', { className: 'l' }, '还没动过的')),
+          h('div', { className: 'bm-stat' }, h('div', { className: 'n' }, stale.length), h('div', { className: 'l' }, '躺了 30 天以上')),
+          h('div', { className: 'bm-stat' }, h('div', { className: 'n' }, empty.length), h('div', { className: 'l' }, '连标题都没有（5 秒法则没执行）'))),
+
+        h('div', null,
+          h('div', { className: 'bm-sec-h' }, h('h3', null, '今天这三条'), h('span', null, '点开就算消化，别存着')),
+          h('div', { className: 'bm-today' },
+            today.map((item) => {
+              const platform = BY_ID[item.platform] || {};
+              return h('div', { key: item.id, className: 'bm-today-card' },
+                item.cover ? h('img', { src: item.cover, alt: '', referrerPolicy: 'no-referrer', loading: 'lazy' }) : null,
+                h('div', { className: 'body' },
+                  h('h4', null, cleanText(item.title) || linkHost(item.url) || '（无标题）'),
+                  h('div', { style: { fontSize: 11.5, color: 'var(--dsw-alias-label-secondary, #9aa0aa)' } },
+                    `${platform.label || item.platform} · ${roleOf(item.platform)} · ${relativeTime(item.savedAt || item.firstSeen)}`),
+                  h('div', { className: 'acts' },
+                    h('button', { className: 'bm-btn primary', onClick: () => { onPatch(item, { status: 'doing' }); onOpen(item); } }, '打开，两分钟'),
+                    h('button', { className: 'bm-btn', onClick: () => onPatch(item, { status: 'archived' }) }, '丢掉'))));
+            }))),
+
+        empty.length
+          ? h('div', null,
+              h('div', { className: 'bm-sec-h' }, h('h3', null, '5 秒法则没执行的那些'), h('span', null, '标题都没有，说明当时根本没决定')),
+              h('div', { style: { marginBottom: 10 } },
+                h('button', {
+                  className: 'bm-btn',
+                  onClick: () => empty.forEach((item) => onPatch(item, { status: 'archived' })),
+                }, `把 ${empty.length} 条一起归档`)),
+              h('div', { className: 'bm-stale' },
+                empty.slice(0, 8).map((item) => h('div', { key: item.id, className: 'bm-stale-row' },
+                  h('span', { style: { fontSize: 11, color: 'var(--dsw-alias-label-secondary)' } }, (BY_ID[item.platform] || {}).label || item.platform),
+                  h('a', { href: item.url, target: '_blank', rel: 'noreferrer' }, item.url),
+                  h('span', { className: 'age' }, relativeTime(item.savedAt || item.firstSeen))))))
+          : null,
+
+        stale.length
+          ? h('div', null,
+              h('div', { className: 'bm-sec-h' }, h('h3', null, '躺太久了'), h('span', null, '超过 30 天没碰，只有三种结局：读、转成任务、删')),
+              h('div', { className: 'bm-stale' },
+                stale.slice(0, 10).map((item) => h('div', { key: item.id, className: 'bm-stale-row' },
+                  h('span', { style: { fontSize: 11, color: 'var(--dsw-alias-label-secondary)' } }, (BY_ID[item.platform] || {}).label || item.platform),
+                  h('a', { href: item.url, target: '_blank', rel: 'noreferrer' }, cleanText(item.title) || item.url),
+                  h('span', { className: 'age' }, `${Math.round(ageOf(item) / 864e5)} 天`),
+                  h('button', { className: 'bm-btn', onClick: () => onRemind([item]) }, '加提醒'),
+                  h('button', { className: 'bm-btn', onClick: () => onPatch(item, { status: 'archived' }) }, '归档')))))
+          : null,
+
+        h('div', null,
+          h('div', { className: 'bm-sec-h' }, h('h3', null, '按角色的积压'), h('span', null, '哪个角色在堆灰')),
+          h('div', { className: 'bm-stale' },
+            backlog.map((entry) => h('div', { key: entry.role, className: 'bm-stale-row' },
+              h('a', { href: '#', onClick: (event) => { event.preventDefault(); props.onFilterRole(entry.role); } }, entry.role),
+              h('span', { style: { fontSize: 11.5, color: 'var(--dsw-alias-label-secondary)' } }, `${entry.count} 条没动`),
+              h('span', { className: 'age' }, entry.oldest ? `最老的 ${Math.round((now - entry.oldest) / 864e5)} 天` : ''))))),
+
+        h('div', { style: { display: 'flex', gap: 8 } },
+          h('button', { className: 'bm-btn', onClick: () => onExport({ ids: today.map((item) => item.id), title: '今天这三条' }) }, '把今天三条导出成 Markdown'),
+          h('button', { className: 'bm-btn', onClick: () => onRemind(today) }, '三条都加进提醒')));
+    }
+
+    function RoleSettings(props) {
+      const [draft, setDraft] = React.useState(null);
+      const roles = props.roles || {};
+      const value = draft || roles;
+
+      const save = (platformId, patch) => {
+        const next = { ...value, [platformId]: { ...value[platformId], ...patch } };
+        setDraft(next);
+        props.onSave({ [platformId]: next[platformId] });
+      };
+
+      return h('div', { className: 'bm-inner' },
+        h('div', { className: 'bm-role-hint' }, '给每个平台定一个角色。采集之后的所有提炼、评分、输出都按它来走。'),
+        h('div', { className: 'bm-roles' },
+          PLATFORMS.map((platform) => {
+            const role = value[platform.id] || { name: '', desc: '', intensity: 'standard' };
+            return h('div', { key: platform.id, className: 'bm-role' },
+              h('div', { className: 'bm-role-top' },
+                h('span', { className: 'dot', style: { background: platform.tint, width: 7, height: 7, borderRadius: 4, display: 'inline-block' } }),
+                platform.label),
+              h('input', {
+                className: 'nm',
+                defaultValue: role.name,
+                placeholder: '角色名，例如：AI 情报站',
+                onBlur: (event) => save(platform.id, { name: event.target.value.trim() }),
+              }),
+              h('input', {
+                defaultValue: role.desc,
+                placeholder: '一句话说明：这个平台的收藏拿来干什么',
+                onBlur: (event) => save(platform.id, { desc: event.target.value.trim() }),
+              }),
+              h('div', { className: 'row' },
+                h('span', { className: 'lbl' }, '消化强度'),
+                h('select', {
+                  defaultValue: role.intensity,
+                  onChange: (event) => save(platform.id, { intensity: event.target.value }),
+                }, INTENSITY.map((level) => h('option', { key: level.id, value: level.id }, level.label)))));
+          })));
+    }
+
     function BookmarksPage() {
       const [state, setState] = React.useState(null);
       const [loading, setLoading] = React.useState(true);
       const [platform, setPlatform] = React.useState('all');
+      const [folder, setFolder] = React.useState('all');
+      const [role, setRole] = React.useState('all');
+      const [exportInfo, setExportInfo] = React.useState(null);
       const [status, setStatus] = React.useState('all');
       const [sort, setSort] = React.useState('saved');
       const [query, setQuery] = React.useState('');
-      const [view, setView] = React.useState('grid');
+      const [view, setView] = React.useState('review');
       const [picked, setPicked] = React.useState(null);
+      const [menu, setMenu] = React.useState(null);
       const [busy, setBusy] = React.useState(false);
       const [hostDown, setHostDown] = React.useState(false);
       const [toastText, setToastText] = React.useState('');
@@ -924,13 +1241,25 @@ window.__ModuleLoader__.load({
             if (searchRef.current) searchRef.current.focus();
           }
           if (event.key === 'Escape') {
-            setPicked(null);
-            if (searchRef.current && document.activeElement === searchRef.current) searchRef.current.blur();
+            if (menu) {
+              setMenu(null);
+              return;
+            }
+            if (picked) {
+              setPicked(null);
+              return;
+            }
+            if (searchRef.current && document.activeElement === searchRef.current) {
+              searchRef.current.blur();
+              return;
+            }
+            // 没有抽屉、也没在搜索框里，Esc 就当“退出这个面板”。
+            exitToConversation();
           }
         };
         document.addEventListener('keydown', onKey);
         return () => document.removeEventListener('keydown', onKey);
-      }, []);
+      }, [picked, menu]);
 
       const patch = React.useCallback(async (item, body) => {
         setState((current) => {
@@ -954,6 +1283,91 @@ window.__ModuleLoader__.load({
         }
       }, [load, toast]);
 
+      const runExport = React.useCallback(async (options) => {
+        const payload = options && options.ids
+          ? { ids: options.ids, title: options.title }
+          : { filter: { platform, folder, role, status, query }, title: `收藏复利 · ${new Date().toLocaleDateString('zh-CN')}` };
+        try {
+          toast('正在写 Markdown…');
+          const response = await fetch(`${API}/export`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || result.ok === false) throw new Error(result.error || '导出失败');
+          setExportInfo(result);
+          toast(`导出 ${result.count} 条 → ${result.obsidianPath ? 'Obsidian + 本地' : '本地'}`);
+        } catch (error) {
+          toast(`没导出去：${error.message}`);
+        }
+      }, [platform, folder, role, status, query]);
+
+      const reveal = React.useCallback(async (target) => {
+        try {
+          await fetch(`${API}/reveal`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ path: target }),
+          });
+        } catch (error) {
+          toast(`打不开：${error.message}`);
+        }
+      }, [toast]);
+
+      const addReminders = React.useCallback(async (list) => {
+        const ids = (list || []).map((item) => item.id);
+        if (!ids.length) return;
+        try {
+          toast('在写提醒事项…');
+          const response = await fetch(`${API}/remind`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ ids }),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || result.ok === false) throw new Error((result.errors && result.errors[0]) || result.error || '失败');
+          toast(`已加 ${result.added} 条到提醒「${result.list}」`);
+        } catch (error) {
+          toast(`提醒没写进去：${error.message}`);
+        }
+      }, []);
+
+      const saveRoles = React.useCallback(async (partial) => {
+        try {
+          const response = await fetch(`${API}/settings`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ settings: { roles: partial } }),
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok || payload.ok === false) throw new Error(payload.error || '保存失败');
+          setState((current) => current
+            ? { ...current, settings: { ...current.settings, roles: { ...current.settings.roles, ...partial } } }
+            : current);
+          toast('角色已保存');
+        } catch (error) {
+          toast(`没存上：${error.message}`);
+        }
+      }, [toast]);
+
+      // 右键菜单的动作：单击卡片永远是打开原文，改造性操作全放这儿。
+      const onMenuAction = React.useCallback((name, item) => {
+        if (name === 'open') window.open(item.url, '_blank', 'noreferrer');
+        else if (name === 'detail') setPicked(item);
+        else if (name === 'toggleDone') patch(item, { status: item.status === 'done' ? 'inbox' : 'done' });
+        else if (name === 'archive') patch(item, { status: item.status === 'archived' ? 'inbox' : 'archived' });
+        else if (name === 'pin') patch(item, { pinned: !item.pinned });
+        else if (name === 'copy') {
+          try {
+            navigator.clipboard.writeText(item.url);
+            toast('链接已复制');
+          } catch {
+            toast('复制失败，手动选一下');
+          }
+        }
+      }, [patch, toast]);
+
       const sync = React.useCallback(async (targets) => {
         setBusy(true);
         try {
@@ -971,6 +1385,8 @@ window.__ModuleLoader__.load({
         }
       }, [load, toast]);
 
+      const roles = (state && state.settings && state.settings.roles) || {};
+      const roleOf = (platformId) => (roles[platformId] && roles[platformId].name) || (BY_ID[platformId] ? BY_ID[platformId].label : '');
       const items = (state && state.items) || [];
       const counts = (state && state.counts) || { total: 0, byPlatform: {} };
       const sources = (state && state.sources) || {};
@@ -979,6 +1395,8 @@ window.__ModuleLoader__.load({
         const needle = query.trim().toLowerCase();
         let list = items.slice();
         if (platform !== 'all') list = list.filter((item) => item.platform === platform);
+        if (folder !== 'all') list = list.filter((item) => (item.folder || '') === folder);
+        if (role !== 'all') list = list.filter((item) => roleOf(item.platform) === role);
         if (status === 'done') list = list.filter((item) => item.status === 'done' || item.status === 'archived');
         if (status === 'open') list = list.filter((item) => item.status !== 'done' && item.status !== 'archived');
         if (needle) {
@@ -996,23 +1414,12 @@ window.__ModuleLoader__.load({
           return sort === 'old' ? ta - tb : tb - ta;
         });
         return list;
-      }, [items, platform, status, sort, query]);
+      }, [items, platform, folder, role, roles, status, sort, query]);
 
       const failed = PLATFORMS.filter((p) => {
         const source = sources[p.id];
         return source && source.status === 'error';
       });
-
-      if (loading) {
-        return h('div', { className: 'bm-root' },
-          h('div', { className: 'bm-inner' },
-            h('div', { className: 'bm-grid' },
-              Array.from({ length: 12 }, (_, i) =>
-                h('div', { key: i },
-                  h('div', { className: 'bm-sk', style: { aspectRatio: '16/9' } }),
-                  h('div', { className: 'bm-sk-line', style: { width: '88%' } }),
-                  h('div', { className: 'bm-sk-line', style: { width: '46%' } }))))));
-      }
 
       const header = h(
         'div',
@@ -1031,8 +1438,10 @@ window.__ModuleLoader__.load({
           }),
           h('span', { className: 'bm-search-key' }, '/')),
         h('div', { className: 'bm-seg' },
+          h('button', { className: view === 'review' ? 'on' : '', onClick: () => setView('review'), title: '复利' }, '复利'),
           h('button', { className: view === 'grid' ? 'on' : '', onClick: () => setView('grid'), title: '网格' }, '网格'),
-          h('button', { className: view === 'digest' ? 'on' : '', onClick: () => setView('digest'), title: '归纳' }, '归纳')),
+          h('button', { className: view === 'digest' ? 'on' : '', onClick: () => setView('digest'), title: '归纳' }, '归纳'),
+          h('button', { className: view === 'roles' ? 'on' : '', onClick: () => setView('roles'), title: '平台角色' }, '角色')),
         h('button', {
           className: `bm-btn primary${busy || (state && state.syncing) ? ' spin' : ''}`,
           onClick: () => sync(),
@@ -1040,19 +1449,31 @@ window.__ModuleLoader__.load({
         },
           icon('refresh', 13),
           state && state.syncing ? '同步中' : '同步'),
+        h('button', {
+          className: 'bm-btn',
+          onClick: () => runExport(),
+          title: '把当前筛选导出成 Markdown（同时写一份到 Obsidian）',
+        }, icon('download', 13), '导出'),
+        h('button', {
+          className: 'bm-exit',
+          onClick: exitToConversation,
+          title: '回到对话（Esc 也可以）',
+        },
+          icon('back', 13),
+          '退出'),
       );
 
       const bar = h(
         'div',
         { className: 'bm-bar' },
-        h('button', { className: `bm-pill${platform === 'all' ? ' on' : ''}`, onClick: () => setPlatform('all') },
+        h('button', { className: `bm-pill${platform === 'all' ? ' on' : ''}`, onClick: () => { setPlatform('all'); setFolder('all'); } },
           '全部', h('span', { className: 'num' }, counts.total)),
         PLATFORMS.map((p) =>
           h('button',
             {
               key: p.id,
               className: `bm-pill${platform === p.id ? ' on' : ''}`,
-              onClick: () => setPlatform(platform === p.id ? 'all' : p.id),
+              onClick: () => { setPlatform(platform === p.id ? 'all' : p.id); setFolder('all'); },
               title: `${p.label} · ${p.home}`,
             },
             h('span', { className: 'dot', style: { background: p.tint } }),
@@ -1075,6 +1496,57 @@ window.__ModuleLoader__.load({
           h('option', { value: 'old' }, '最早收藏')),
       );
 
+      const roleOptions = React.useMemo(() => {
+        const seen = new Map();
+        for (const platform of PLATFORMS) {
+          const name = (roles[platform.id] && roles[platform.id].name) || '';
+          if (!name || seen.has(name)) continue;
+          seen.set(name, (seen.get(name) || 0));
+        }
+        return [...seen.keys()];
+      }, [roles]);
+
+      const folderCounts = React.useMemo(() => {
+        const map = new Map();
+        for (const item of items) {
+          if (platform !== 'all' && item.platform !== platform) continue;
+          const name = item.folder || '';
+          if (!name) continue;
+          map.set(name, (map.get(name) || 0) + 1);
+        }
+        return [...map.entries()].sort((a, b) => b[1] - a[1]);
+      }, [items, platform]);
+
+      const roleBar = roleOptions.length > 1
+        ? h('div', { className: 'bm-folders' },
+            h('button', {
+              className: `bm-folder${role === 'all' ? ' on' : ''}`,
+              onClick: () => setRole('all'),
+            }, '按角色'),
+            roleOptions.map((name) =>
+              h('button', {
+                key: name,
+                className: `bm-folder${role === name ? ' on' : ''}`,
+                onClick: () => setRole(role === name ? 'all' : name),
+              }, name)))
+        : null;
+
+      const showFolders = platform !== 'all' && folderCounts.length > 1;
+      const folders = showFolders
+        ? h('div', { className: 'bm-folders' },
+            h('button', {
+              className: `bm-folder${folder === 'all' ? ' on' : ''}`,
+              onClick: () => setFolder('all'),
+            }, '全部收藏夹', h('span', { className: 'num' }, folderCounts.reduce((sum, entry) => sum + entry[1], 0))),
+            folderCounts.map(([name, count]) =>
+              h('button', {
+                key: name,
+                className: `bm-folder${folder === name ? ' on' : ''}`,
+                onClick: () => setFolder(folder === name ? 'all' : name),
+                title: name,
+              }, name, h('span', { className: 'num' }, count))))
+        : null;
+
       const warn = failed.length
         ? h('div', { className: 'bm-warn' },
             h('div', { className: 'bm-warn-head' }, '这些平台还没接上：'),
@@ -1088,6 +1560,19 @@ window.__ModuleLoader__.load({
               h('div', { className: 'bm-warn-head' }, '连不上插件后端'),
               h('div', { className: 'bm-warn-row' }, 'Host 那一半没跑起来，在插件管理里禁用再启用一次。'))
           : null;
+
+      // 注意：这个早退必须放在所有 hook 之后，否则加载完成那一刻
+      // hook 数量变了，React 会直接抛 #310（Rendered fewer hooks than expected）。
+      if (loading) {
+        return h('div', { className: 'bm-root' },
+          h('div', { className: 'bm-inner' },
+            h('div', { className: 'bm-grid' },
+              Array.from({ length: 12 }, (_, i) =>
+                h('div', { key: i },
+                  h('div', { className: 'bm-sk', style: { aspectRatio: '16/9' } }),
+                  h('div', { className: 'bm-sk-line', style: { width: '88%' } }),
+                  h('div', { className: 'bm-sk-line', style: { width: '46%' } }))))));
+      }
 
       let body;
       if (!visible.length) {
@@ -1103,6 +1588,7 @@ window.__ModuleLoader__.load({
               onToggleDone: (entry) => patch(entry, { status: entry.status === 'done' ? 'inbox' : 'done' }),
               onPin: (entry) => patch(entry, { pinned: !entry.pinned }),
               onOpen: (entry) => setPicked(entry),
+              onMenu: (entry, x, y) => setMenu({ item: entry, x, y }),
             })));
       }
 
@@ -1110,10 +1596,38 @@ window.__ModuleLoader__.load({
         h('div', { className: 'bm-inner' },
           header,
           warn,
-          view === 'digest' ? h(DigestPage, { revision: state && state.updatedAt }) : h(React.Fragment, null, bar, body)),
+          exportInfo
+            ? h('div', { className: 'bm-exportbar' },
+                icon('download', 13),
+                h('span', null, `已导出 ${exportInfo.count} 条`),
+                exportInfo.obsidianPath
+                  ? h('button', { className: 'bm-btn', onClick: () => reveal(exportInfo.obsidianPath) }, 'Obsidian 里看')
+                  : null,
+                h('button', { className: 'bm-btn', onClick: () => reveal(exportInfo.path) }, '打开导出目录'))
+            : null,
+
+          view === 'digest'
+            ? h(DigestPage, { revision: state && state.updatedAt })
+            : view === 'review'
+              ? h(ReviewPage, {
+                  items,
+                  roles,
+                  onOpen: (item) => window.open(item.url, '_blank', 'noreferrer'),
+                  onPatch: patch,
+                  onRemind: addReminders,
+                  onExport: runExport,
+                  onFilterRole: (name) => { setRole(name); setView('list'); },
+                })
+              : view === 'roles'
+              ? h(RoleSettings, { roles, onSave: saveRoles })
+              : h(React.Fragment, null, bar, roleBar, folders, body)),
+        menu
+          ? h(ContextMenu, { menu, onClose: () => setMenu(null), onAction: onMenuAction })
+          : null,
         picked
           ? h(Sheet, {
               item: picked,
+              role: roleOf(picked.platform),
               onClose: () => setPicked(null),
               onSave: patch,
               toast,
@@ -1130,10 +1644,50 @@ window.__ModuleLoader__.load({
       return h('span', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center' } }, icon('bookmark', size));
     }
 
+    // 退出这个面板：主区是 keyed slot，切回 conversation 就等于“退出收藏夹”。
+    // layout 服务在 apply 时不一定就绪，所以点击那一刻再去取。
+    let clientCtx = null;
+    function exitToConversation() {
+      let layout = null;
+      try {
+        if (clientCtx && clientCtx.layout) layout = clientCtx.layout;
+        else if (clientCtx && typeof clientCtx.get === 'function') layout = clientCtx.get('layout');
+      } catch (error) {
+        console.error('[bookmarks] 取 layout 失败', error);
+      }
+      if (!layout) {
+        console.error('[bookmarks] 拿不到 layout 服务，退回用 Esc 之外的方式不行');
+        return;
+      }
+      // 关键：真正的“回到对话”是把 activePanelId 置空（layout 里主面板
+      // 的 id 兜底值就是 "conversation"，写 'conversation' 反而让面板
+      // 一直算“激活”，对话区被挡住 —— 这就是之前点退出没反应的原因。
+      let before = null;
+      try {
+        if (layout.panelInfo && typeof layout.panelInfo.getSnapshot === 'function') {
+          before = layout.panelInfo.getSnapshot().activePanelId;
+        }
+      } catch (error) {
+        console.error('[bookmarks] 读 panelInfo 失败', error);
+      }
+      try {
+        layout.selectPanel(null);
+      } catch (error) {
+        console.error('[bookmarks] 退出失败', error);
+        try { layout.selectPanel('conversation'); } catch (nested) { console.error('[bookmarks] 退出失败2', nested); }
+      }
+      reportAction({ where: 'exit', before, after: (() => {
+        try { return layout.panelInfo.getSnapshot().activePanelId; } catch { return 'unknown'; }
+      })() });
+    }
+
     // ------------------------------------------------------------ 挂载
     return {
+      // 只声明 slots：这是唯一硬依赖。layout 在点击那一刻用 ctx.get 现取，
+      // 免得为了一个按钮改动 inject 形态、把整个 UI 的激活条件绑死。
       inject: ['slots'],
       apply(ctx) {
+        clientCtx = ctx;
         let slots = ctx && ctx.slots;
         if (!slots && ctx && typeof ctx.get === 'function') {
           try { slots = ctx.get('slots'); } catch (error) { console.error('[bookmarks] 取 slots 失败', error); }

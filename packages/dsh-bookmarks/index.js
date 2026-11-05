@@ -86,7 +86,148 @@ const DEFAULT_SETTINGS = {
   limits: { x: 300, youtube: 100, reddit: 50, bilibili: 600, zhihu: 20, xiaohongshu: 120 },
   bilibiliMaxFolders: 20,
   timeoutMs: 180000,
+  // 零摩擦那几条：导出到哪、提醒进哪个列表、日历放哪个日历、多久自己跑一次。
+  obsidianVault: path.join(os.homedir(), 'Library/Mobile Documents/iCloud~md~obsidian/Documents/fricless'),
+  obsidianFolder: '05-收藏复利',
+  remindersList: '',
+  calendarName: '',
+  autoSyncHours: 6,
+  // 每个平台在这个人这里的“角色”：不是标签，是后面所有提炼/路由规则的开关。
+  roles: {
+    x: { name: '前沿情报站', desc: '高质量行业动态、AI/天文/金融前沿、巨头一手消息', intensity: 'light' },
+    youtube: { name: '体系化学习库', desc: '系统课程、技术深度讲解、海外优质教程', intensity: 'deep' },
+    bilibili: { name: '中文实操教程库', desc: '本土化实操教程、项目复盘、中文知识讲解', intensity: 'standard' },
+    reddit: { name: '用户真实洞察池', desc: '海外用户真实反馈、需求痛点、踩坑经验', intensity: 'standard' },
+    zhihu: { name: '深度观点分析库', desc: '长文深度分析、行业观点、逻辑拆解', intensity: 'standard' },
+    xiaohongshu: { name: '生活化经验库', desc: '实操经验、种草测评、轻量解决方案', intensity: 'light' },
+  },
 }
+
+
+// ---------------------------------------------------------------- 走出收藏夹
+// 收藏不是终点，能不能“用上”才是。这里只做三件确定的事：
+// 写成 Markdown、丢进提醒事项、排进日历。全部走本机能力，不联网。
+
+function dayStamp(date = new Date()) {
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`
+}
+
+function timeStamp(date = new Date()) {
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${dayStamp(date)}-${pad(date.getHours())}${pad(date.getMinutes())}`
+}
+
+function mdEscape(text) {
+  return String(text || '').replace(/\r/g, '').replace(/\n+/g, ' ').trim()
+}
+
+function linkHostOf(url) {
+  try {
+    return new URL(String(url)).hostname.replace(/^www\./, '')
+  } catch {
+    return ''
+  }
+}
+
+function shortDate(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+function itemMarkdown(item, roleName) {
+  const bare = String(item.title || '').replace(/https?:\/\/\S+/g, '').trim()
+  const title = mdEscape(bare) || mdEscape(linkHostOf(item.url)) || mdEscape(item.url)
+  const bits = [item.author, shortDate(item.savedAt || item.firstSeen), item.duration, item.folder].filter(Boolean)
+  const meta = bits.length ? ` · ${bits.join(' · ')}` : ''
+  const tags = (item.tags || []).length ? ` ${(item.tags || []).map((tag) => `#${tag.replace(/\s+/g, '-')}`).join(' ')}` : ''
+  const lines = [`- [${title}](${item.url})${meta}${tags}`]
+  if (item.summary) lines.push(`  > ${mdEscape(item.summary)}`)
+  if (item.note) lines.push(`  > 备注：${mdEscape(item.note)}`)
+  return lines.join('\n')
+}
+
+function buildMarkdown(items, settings, { title, note } = {}) {
+  const now = new Date()
+  const roles = settings.roles || {}
+  const byRole = new Map()
+  for (const item of items) {
+    const role = (roles[item.platform] && roles[item.platform].name) || item.platform
+    if (!byRole.has(role)) byRole.set(role, [])
+    byRole.get(role).push(item)
+  }
+  const out = [
+    '---',
+    `title: ${title}`,
+    'source: dsh-bookmarks',
+    `created: ${now.toISOString()}`,
+    `count: ${items.length}`,
+    '---',
+    '',
+    `# ${title}`,
+    '',
+    `> 来源：DeepSeek Harness 收藏夹中枢 · ${items.length} 条`,
+    `> 导出时间：${now.toLocaleString('zh-CN')}${note ? ` · ${note}` : ''}`,
+    '',
+  ]
+  for (const [role, list] of byRole) {
+    out.push(`## ${role}（${list.length}）`, '')
+    const sorted = [...list].sort((a, b) =>
+      String(b.savedAt || b.firstSeen || '').localeCompare(String(a.savedAt || a.firstSeen || '')))
+    for (const item of sorted) out.push(itemMarkdown(item, role), '')
+  }
+  return out.join('\n')
+}
+
+async function osascript(script, args = []) {
+  return runCli('/usr/bin/osascript', ['-e', script, '--', ...args], { timeout: 30000 })
+}
+
+const REMIND_SCRIPT = `
+on run argv
+  set theTitle to item 1 of argv
+  set theBody to item 2 of argv
+  set listName to item 3 of argv
+  tell application "Reminders"
+    if listName is "" then
+      set targetList to default list
+    else
+      try
+        set targetList to list listName
+      on error
+        set targetList to make new list with properties {name:listName}
+      end try
+    end if
+    make new reminder at end of targetList with properties {name:theTitle, body:theBody}
+  end tell
+end run
+`
+
+const CALENDAR_SCRIPT = `
+on run argv
+  set theTitle to item 1 of argv
+  set theDesc to item 2 of argv
+  set calName to item 3 of argv
+  set startDate to (current date)
+  set hours of startDate to 20
+  set minutes of startDate to 0
+  set seconds of startDate to 0
+  set startDate to startDate + 1 * days
+  set endDate to startDate + 20 * minutes
+  tell application "Calendar"
+    if calName is "" then
+      set targetCal to calendar 1
+    else
+      set targetCal to calendar calName
+    end if
+    tell targetCal
+      make new event with properties {summary:theTitle, start date:startDate, end date:endDate, description:theDesc}
+    end tell
+  end tell
+end run
+`
 
 // ---------------------------------------------------------------- 基础工具
 
@@ -395,6 +536,12 @@ class Store {
             ...(parsed.settings || {}),
             enabled: { ...DEFAULT_SETTINGS.enabled, ...(parsed.settings?.enabled || {}) },
             limits: { ...DEFAULT_SETTINGS.limits, ...(parsed.settings?.limits || {}) },
+            roles: { ...DEFAULT_SETTINGS.roles, ...(parsed.settings?.roles || {}) },
+            obsidianVault: parsed.settings?.obsidianVault ?? DEFAULT_SETTINGS.obsidianVault,
+            obsidianFolder: parsed.settings?.obsidianFolder ?? DEFAULT_SETTINGS.obsidianFolder,
+            remindersList: parsed.settings?.remindersList ?? DEFAULT_SETTINGS.remindersList,
+            calendarName: parsed.settings?.calendarName ?? DEFAULT_SETTINGS.calendarName,
+            autoSyncHours: parsed.settings?.autoSyncHours ?? DEFAULT_SETTINGS.autoSyncHours,
           },
         }
       }
@@ -960,6 +1107,7 @@ class Hub {
     const now = new Date().toISOString()
     let added = 0
     let updated = 0
+    const fresh = []
     for (const row of rows) {
       const item = makeItem(platform, row, row.meta?.folder || folder)
       if (!item) continue
@@ -987,9 +1135,10 @@ class Hub {
           lastSeen: now,
         }
         added += 1
+        fresh.push(this.store.state.items[item.id])
       }
     }
-    return { added, updated, ids: new Set(rows.map((row) => makeItem(platform, row, row.meta?.folder || folder)).filter(Boolean).map((item) => item.id)) }
+    return { added, updated, fresh, ids: new Set(rows.map((row) => makeItem(platform, row, row.meta?.folder || folder)).filter(Boolean).map((item) => item.id)) }
   }
 
   // 平台那边已经取消收藏的条目，如果用户没动过（没备注/标签/状态/置顶），就从本地删掉，
@@ -1041,7 +1190,8 @@ class Hub {
       const limit = settings.limits?.[platform] || 50
       try {
         const { folder, rows } = await reader(null, { limit, settings, credentials })
-        const { added, updated, ids } = this.mergeItems(platform, folder, rows)
+        const { added, updated, ids, fresh } = this.mergeItems(platform, folder, rows)
+        freshAll.push(...fresh)
         // 只在「这个平台是全量枚举、且没有收藏夹失败」时清理旧条目；
         // 有额度上限的平台（知乎/Reddit）不能清，会把限额外的条目误删。
         const fullyEnumerated = platform === 'bilibili' && !rows.partial && rows.length < (settings.limits?.bilibili || 600)
@@ -1073,7 +1223,32 @@ class Hub {
     this.syncing = false
     await this.store.save()
     this.emit()
-    return { started: true }
+    if (freshAll.length) {
+      // 不打扰：只在本地记一笔“今天又进来了什么”，Agent 读这个文件就知道要不要提炼。
+      try {
+        const dir = path.join(DATA_DIR, 'inbox')
+        await fsp.mkdir(dir, { recursive: true })
+        const day = new Date().toISOString().slice(0, 10)
+        const file = path.join(dir, `${day}.md`)
+        const exists = fs.existsSync(file)
+        const lines = []
+        if (!exists) lines.push(`# ${day} 新收藏`, '', `> 来自收藏夹中枢的自动巡检，共 ${freshAll.length} 条。`, '')
+        for (const item of freshAll) {
+          lines.push(`- [${mdEscape(item.title) || item.url}](${item.url}) · ${item.platform}${item.folder ? ` · ${item.folder}` : ''}`)
+        }
+        lines.push('')
+        await fsp.appendFile(file, lines.join('\n'), 'utf8')
+        this.lastInboxNote = file
+      } catch (error) {
+        console.error('[bookmarks] 写新收藏清单失败', error)
+      }
+    }
+    return { started: true, added: freshAll.length }
+  }
+
+  onChange(listener) {
+    this.listeners.add(listener)
+    return () => this.listeners.delete(listener)
   }
 
   emit() {
@@ -1290,10 +1465,109 @@ function makeHandler(hub) {
           ...(body.settings || {}),
           enabled: { ...current.enabled, ...(body.settings?.enabled || {}) },
           limits: { ...current.limits, ...(body.settings?.limits || {}) },
+          roles: { ...current.roles, ...(body.settings?.roles || {}) },
         }
         await hub.store.save()
         return sendJson(res, 200, { ok: true, settings: hub.store.state.settings })
       }
+      if (req.method === 'POST' && route === '/export') {
+        const body = await readBody(req)
+        await hub.init()
+        const settings = hub.store.state.settings
+        let items = hub.store.items()
+        if (Array.isArray(body.ids) && body.ids.length) {
+          const wanted = new Set(body.ids.map(String))
+          items = items.filter((item) => wanted.has(item.id))
+        } else if (body.filter && typeof body.filter === 'object') {
+          const f = body.filter
+          if (f.platform && f.platform !== 'all') items = items.filter((item) => item.platform === f.platform)
+          if (f.folder && f.folder !== 'all') items = items.filter((item) => String(item.folder || '') === String(f.folder))
+          if (f.status && f.status !== 'all') items = items.filter((item) => item.status === f.status)
+          if (f.role && f.role !== 'all') {
+            const roles = settings.roles || {}
+            const matched = Object.keys(roles).filter((key) => roles[key] && roles[key].name === f.role)
+            items = items.filter((item) => matched.includes(item.platform))
+          }
+          if (f.query) {
+            const needle = String(f.query).toLowerCase()
+            items = items.filter((item) => [item.title, item.author, item.excerpt, item.note, ...(item.tags || [])]
+              .join(' ').toLowerCase().includes(needle))
+          }
+        }
+        const title = body.title || `收藏复利 · ${new Date().toLocaleDateString('zh-CN')}`
+        const markdown = buildMarkdown(items, settings, { title, note: body.note })
+        const outDir = path.join(DATA_DIR, 'exports')
+        await fsp.mkdir(outDir, { recursive: true })
+        const file = path.join(outDir, `收藏-${timeStamp()}.md`)
+        await fsp.writeFile(file, markdown, 'utf8')
+        let obsidianPath = null
+        let obsidianError = null
+        if (body.toObsidian !== false && settings.obsidianVault) {
+          try {
+            const vault = String(settings.obsidianVault).replace(/^~(?=$|\/)/, os.homedir())
+            const dir = path.join(vault, settings.obsidianFolder || '05-收藏复利')
+            await fsp.mkdir(dir, { recursive: true })
+            obsidianPath = path.join(dir, `${new Date().toISOString().slice(0, 10)} ${title.replace(/[\\/:*?"<>|]/g, '-')}.md`)
+            await fsp.writeFile(obsidianPath, markdown, 'utf8')
+          } catch (error) {
+            obsidianError = String(error?.message || error)
+          }
+        }
+        return sendJson(res, 200, { ok: true, path: file, obsidianPath, obsidianError, count: items.length })
+      }
+
+      if (req.method === 'POST' && route === '/remind') {
+        const body = await readBody(req)
+        await hub.init()
+        const settings = hub.store.state.settings
+        const ids = new Set((body.ids || []).map(String))
+        const picked = hub.store.items().filter((item) => ids.has(item.id)).slice(0, 12)
+        if (!picked.length) return sendJson(res, 400, { ok: false, error: '没选中条目' })
+        const errors = []
+        let added = 0
+        for (const item of picked) {
+          const title = (item.title || item.url).slice(0, 120)
+          const detail = `${item.url}${item.note ? `\n\n备注：${item.note}` : ''}`
+          const result = await osascript(REMIND_SCRIPT, [title, detail, settings.remindersList || ''])
+          if (result.ok) added += 1
+          else errors.push(String(result.stderr || result.spawnError || '').trim().slice(0, 160))
+        }
+        return sendJson(res, 200, {
+          ok: added > 0,
+          added,
+          requested: picked.length,
+          list: settings.remindersList || '默认列表',
+          errors: errors.slice(0, 3),
+        })
+      }
+
+      if (req.method === 'POST' && route === '/calendar') {
+        const body = await readBody(req)
+        await hub.init()
+        const settings = hub.store.state.settings
+        const ids = new Set((body.ids || []).map(String))
+        const picked = hub.store.items().filter((item) => ids.has(item.id)).slice(0, 6)
+        if (!picked.length) return sendJson(res, 400, { ok: false, error: '没选中条目' })
+        const errors = []
+        let added = 0
+        for (const item of picked) {
+          const title = `读：${(item.title || item.url).slice(0, 80)}`
+          const detail = `${item.url}${item.summary ? `\n\n${item.summary}` : ''}`
+          const result = await osascript(CALENDAR_SCRIPT, [title, detail, settings.calendarName || ''])
+          if (result.ok) added += 1
+          else errors.push(String(result.stderr || result.spawnError || '').trim().slice(0, 160))
+        }
+        return sendJson(res, 200, { ok: added > 0, added, requested: picked.length, errors: errors.slice(0, 3) })
+      }
+
+      if (req.method === 'POST' && route === '/reveal') {
+        const body = await readBody(req)
+        const target = String(body.path || '')
+        if (!target) return sendJson(res, 400, { ok: false, error: '缺 path' })
+        await runCli('/usr/bin/open', ['-R', target], { timeout: 8000 })
+        return sendJson(res, 200, { ok: true })
+      }
+
       return sendJson(res, 404, { ok: false, error: 'no such route' })
     } catch (error) {
       return sendJson(res, 500, { ok: false, error: String(error?.message || error) })
@@ -1330,6 +1604,8 @@ function registerTools(ctx, hub) {
         type: 'object',
         properties: {
           platform: { type: 'string', description: 'x | youtube | reddit | bilibili | zhihu | xiaohongshu' },
+          folder: { type: 'string', description: '只看某个收藏夹，例如 B 站的「AP自学」' },
+          role: { type: 'string', description: '按平台角色过滤，例如「前沿情报站」' },
           status: { type: 'string', description: 'inbox | doing | done | archived' },
           query: { type: 'string', description: '标题/作者/摘要里的关键词' },
           limit: { type: 'integer', description: '最多返回多少条，默认 30' },
@@ -1346,6 +1622,12 @@ function registerTools(ctx, hub) {
         const needle = String(options.query || '').toLowerCase()
         let items = hub.store.items()
         if (options.platform) items = items.filter((item) => item.platform === options.platform)
+        if (options.folder) items = items.filter((item) => String(item.folder || '') === String(options.folder))
+        if (options.role) {
+          const roles = hub.store.state.settings.roles || {}
+          const matched = Object.keys(roles).filter((key) => roles[key] && roles[key].name === options.role)
+          items = items.filter((item) => matched.includes(item.platform))
+        }
         if (options.status) items = items.filter((item) => item.status === options.status)
         if (needle) {
           items = items.filter((item) =>
@@ -1367,6 +1649,7 @@ function registerTools(ctx, hub) {
             author: item.author,
             url: item.url,
             folder: item.folder,
+            role: (hub.store.state.settings.roles?.[item.platform] || {}).name || null,
             status: item.status,
             tags: item.tags,
             note: item.note,
@@ -1464,6 +1747,101 @@ function registerTools(ctx, hub) {
     }),
   )
 
+
+  disposers.push(
+    tools.register({
+      name: 'bookmarks_export',
+      description:
+        '把收藏导出成 Markdown：默认写两份（~/.dsh-bookmarks/exports/ 和 Obsidian 的 fricless/05-收藏复利/），返回落盘路径。可按平台/收藏夹/角色/状态/关键词筛选，也可以只给 ids。',
+      parameters: {
+        type: 'object',
+        properties: {
+          ids: { type: 'array', items: { type: 'string' }, description: '只导这些条目' },
+          platform: { type: 'string' },
+          folder: { type: 'string' },
+          role: { type: 'string' },
+          status: { type: 'string' },
+          query: { type: 'string' },
+          title: { type: 'string', description: '文档标题，默认带日期' },
+          toObsidian: { type: 'boolean', description: '是否同时写进 Obsidian，默认 true' },
+        },
+        additionalProperties: false,
+      },
+      output: toolOutput({ type: 'object', properties: { path: { type: 'string' }, obsidianPath: { type: 'string' } } }),
+      async execute(args) {
+        await hub.init()
+        const settings = hub.store.state.settings
+        let items = hub.store.items()
+        if (Array.isArray(args?.ids) && args.ids.length) {
+          const wanted = new Set(args.ids.map(String))
+          items = items.filter((item) => wanted.has(item.id))
+        } else {
+          if (args?.platform) items = items.filter((item) => item.platform === args.platform)
+          if (args?.folder) items = items.filter((item) => String(item.folder || '') === String(args.folder))
+          if (args?.status) items = items.filter((item) => item.status === args.status)
+          if (args?.role) {
+            const roles = settings.roles || {}
+            const matched = Object.keys(roles).filter((key) => roles[key] && roles[key].name === args.role)
+            items = items.filter((item) => matched.includes(item.platform))
+          }
+          if (args?.query) {
+            const needle = String(args.query).toLowerCase()
+            items = items.filter((item) => [item.title, item.author, item.excerpt, item.note, ...(item.tags || [])]
+              .join(' ').toLowerCase().includes(needle))
+          }
+        }
+        const title = args?.title || `收藏复利 · ${new Date().toLocaleDateString('zh-CN')}`
+        const markdown = buildMarkdown(items, settings, { title })
+        const outDir = path.join(DATA_DIR, 'exports')
+        await fsp.mkdir(outDir, { recursive: true })
+        const file = path.join(outDir, `收藏-${timeStamp()}.md`)
+        await fsp.writeFile(file, markdown, 'utf8')
+        let obsidianPath = null
+        if (args?.toObsidian !== false && settings.obsidianVault) {
+          try {
+            const vault = String(settings.obsidianVault).replace(/^~(?=$|\/)/, os.homedir())
+            const dir = path.join(vault, settings.obsidianFolder || '05-收藏复利')
+            await fsp.mkdir(dir, { recursive: true })
+            obsidianPath = path.join(dir, `${new Date().toISOString().slice(0, 10)} ${title.replace(/[\\/:*?"<>|]/g, '-')}.md`)
+            await fsp.writeFile(obsidianPath, markdown, 'utf8')
+          } catch {}
+        }
+        return { path: file, obsidianPath, count: items.length }
+      },
+    }),
+  )
+
+  disposers.push(
+    tools.register({
+      name: 'bookmarks_review',
+      description:
+        '看一眼“还没动的东西”：未读总数、躺了 30 天以上的、连标题都没有的（5 秒法则没执行）、按平台的积压。用来决定今天该消化什么。',
+      parameters: { type: 'object', properties: {}, additionalProperties: false },
+      output: toolOutput({ type: 'object', properties: { inbox: { type: 'integer' }, stale: { type: 'array' } } }),
+      async execute() {
+        await hub.init()
+        const now = Date.now()
+        const items = hub.store.items()
+        const inbox = items.filter((item) => (item.status || 'inbox') === 'inbox')
+        const age = (item) => now - new Date(item.savedAt || item.firstSeen || 0).getTime()
+        const stale = inbox.filter((item) => age(item) > 30 * 864e5)
+        // 标题只剩链接的，等于“当时根本没起标题”，归到 5 秒法则那一类。
+        const empty = inbox.filter((item) => !String(item.title || '').replace(/https?:\/\/\S+/g, '').trim())
+        const byPlatform = {}
+        for (const item of inbox) byPlatform[item.platform] = (byPlatform[item.platform] || 0) + 1
+        return {
+          inbox: inbox.length,
+          staleCount: stale.length,
+          emptyCount: empty.length,
+          byPlatform,
+          stale: stale.slice(0, 10).map((item) => ({
+            id: item.id, title: item.title, platform: item.platform, days: Math.round(age(item) / 864e5),
+          })),
+        }
+      },
+    }),
+  )
+
   return disposers
 }
 
@@ -1510,6 +1888,30 @@ export function apply(ctx) {
   } catch (error) {
     console.error('[bookmarks] 工具注册失败', error)
   }
+
+  // 零操作的那一半：自己按点跑一次同步。跑完只在本地留清单，不弹窗、不打扰。
+  ctx.effect(() => {
+    let timer = null
+    const schedule = () => {
+      const hours = Number(hub.store.state.settings.autoSyncHours) || 0
+      if (timer) clearInterval(timer)
+      timer = null
+      if (hours <= 0) return
+      timer = setInterval(() => {
+        if (hub.syncing) return
+        hub.sync().catch((error) => console.error('[bookmarks] 自动同步失败', error))
+      }, Math.max(1, hours) * 3600 * 1000)
+      if (typeof timer.unref === 'function') timer.unref()
+    }
+    hub.init().then(schedule).catch(() => {})
+    if (typeof hub.onChange === 'function') {
+      // 设置改了（比如把自动同步关掉），下一轮生效。
+      hub.onChange(schedule)
+    }
+    return () => {
+      if (timer) clearInterval(timer)
+    }
+  })
 
   return { hub }
 }
