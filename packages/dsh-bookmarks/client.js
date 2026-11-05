@@ -1656,7 +1656,8 @@ window.__ModuleLoader__.load({
         console.error('[bookmarks] 取 layout 失败', error);
       }
       if (!layout) {
-        console.error('[bookmarks] 拿不到 layout 服务，退回用 Esc 之外的方式不行');
+        console.error('[bookmarks] 拿不到 layout 服务');
+        reportAction({ where: 'exit', ok: false, reason: 'no-layout-service', ctxKeys: clientCtx ? Object.keys(clientCtx).slice(0, 24) : null });
         return;
       }
       // 关键：真正的“回到对话”是把 activePanelId 置空（layout 里主面板
@@ -1676,7 +1677,7 @@ window.__ModuleLoader__.load({
         console.error('[bookmarks] 退出失败', error);
         try { layout.selectPanel('conversation'); } catch (nested) { console.error('[bookmarks] 退出失败2', nested); }
       }
-      reportAction({ where: 'exit', before, after: (() => {
+      reportAction({ where: 'exit', ok: true, hasSelectPanel: typeof layout.selectPanel === 'function', before, after: (() => {
         try { return layout.panelInfo.getSnapshot().activePanelId; } catch { return 'unknown'; }
       })() });
     }
