@@ -1,8 +1,10 @@
 // 全平台收藏夹 —— 客户端一半（DSH Web UI 插件）
 // 结构：一个主区整页（main/bookmarks）+ 一个侧栏按钮（sidebar.panellist/bookmarks）
 // 数据：全部从同源 HTTP 路由 /dsh-bookmarks/v2/api 拿，不走 host.call。
+// 注意：这里的 id 必须和 package.json 的 name 完全一致，否则 loader 匹配不到这一半，
+// 表现就是「侧栏图标和整页都消失了」——改成 @shawnclink 时漏改过一次。
 window.__ModuleLoader__.load({
-  id: '@local/dsh-bookmarks',
+  id: '@shawnclink/dsh-bookmarks',
   factory(require) {
     const React = require('react');
     const h = React.createElement;
@@ -385,7 +387,7 @@ window.__ModuleLoader__.load({
         if (existing) existing.remove();
         const el = document.createElement('style');
         el.setAttribute('data-dsh-bookmarks', '1');
-        el.setAttribute('data-plugin', '@local/dsh-bookmarks');
+        el.setAttribute('data-plugin', '@shawnclink/dsh-bookmarks');
         el.textContent = CSS;
         document.head.appendChild(el);
         return () => { if (el.parentNode) el.parentNode.removeChild(el); };
@@ -1686,10 +1688,10 @@ window.__ModuleLoader__.load({
     return {
       // 只声明 slots：这是唯一硬依赖。layout 在点击那一刻用 ctx.get 现取，
       // 免得为了一个按钮改动 inject 形态、把整个 UI 的激活条件绑死。
-      // layout 必须显式声明：客户端给插件的是受限 ctx（只有 fiber + 注入的服务），
-      // 不声明就拿不到 layout，退出按钮会一直报 no-layout-service。
-      // 写成 optional —— 万一某个版本没有 layout 服务，插件也不会卡在 pending 里不挂载。
-      inject: { slots: { required: true }, layout: { required: false } },
+      // 只能是字符串数组：loader 的 optionalStringArray 校验会在对象形式上直接判失败，
+      // 整条 entry 不激活，侧栏图标就没了。layout 由 dsh-client-ui-layout 在根上 provide，
+      // 同层的 sidebar/workspace 也是这么 inject 的。
+      inject: ['slots', 'layout'],
       apply(ctx) {
         clientCtx = ctx;
         let slots = ctx && ctx.slots;
