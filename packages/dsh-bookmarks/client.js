@@ -173,12 +173,15 @@ window.__ModuleLoader__.load({
   position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:flex-end; gap:6px; padding:8px;
   background:linear-gradient(to top, rgba(6,8,12,.62), rgba(6,8,12,0) 55%);
   opacity:0; transition:opacity .2s;
+  /* 这一层铺满封面，但不能接点击 —— 否则点图片就被它拦住，只有底下的标题能跳 */
+  pointer-events:none;
 }
 .bm-card:hover .bm-mask{opacity:1;}
 .bm-icon-btn{
   width:28px; height:28px; border-radius:8px; border:1px solid rgba(255,255,255,.2);
   background:rgba(14,16,20,.6); backdrop-filter:blur(8px); color:#fff; cursor:pointer;
   display:flex; align-items:center; justify-content:center; padding:0;
+  pointer-events:auto;
   transition:background .15s, transform .12s, border-color .15s;
 }
 .bm-icon-btn:hover{background:rgba(24,26,32,.9); transform:translateY(-1px); border-color:rgba(255,255,255,.34);}
@@ -290,6 +293,13 @@ window.__ModuleLoader__.load({
 }
 .bm-menu button:hover{background:var(--dsw-alias-bg-layer-2, #26282d);}
 .bm-menu button .hint{margin-left:auto; font-size:11px; opacity:.45;}
+/* 菜单头部的链接行：一眼能看出这张图指向哪个视频，点一下即复制 */
+.bm-menu .urlline{
+  font-size:11px; color:var(--dsw-alias-label-secondary, #9aa0aa); gap:6px;
+  padding:5px 9px 7px; letter-spacing:.01em;
+}
+.bm-menu .urlline span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.bm-menu .urlline:hover{color:var(--dsw-alias-label-primary, #e9ebef);}
 .bm-menu .sep{height:1px; margin:4px 6px; background:var(--dsw-alias-border-l1, #2f3136);}
 .bm-menu-backdrop{position:fixed; inset:0; z-index:65;}
 .bm-empty{
@@ -512,6 +522,19 @@ window.__ModuleLoader__.load({
       return match ? match[1].replace(/^www\./, '') : '';
     }
 
+    // 右键菜单里显示的那截路径：太长就掐掉，够看出是哪个视频/哪条推文就行。
+    function shortPath(url) {
+      try {
+        const path = new URL(String(url)).pathname.replace(/\/$/, '');
+        if (!path || path === '/') return '';
+        const parts = path.split('/').filter(Boolean);
+        const tail = parts.slice(-2).join('/');
+        return '/' + (tail.length > 34 ? tail.slice(0, 33) + '…' : tail);
+      } catch {
+        return '';
+      }
+    }
+
     function textOf(item) {
       return String(item.summary || item.excerpt || item.title || '').replace(/\s+/g, ' ').trim();
     }
@@ -613,7 +636,7 @@ window.__ModuleLoader__.load({
         plays ? h('span', { className: 'bm-plays' }, icon('play', 10), plays) : null,
         h(
           'div',
-          { className: 'bm-mask', onClick: (event) => event.preventDefault() },
+          { className: 'bm-mask' },
           h(
             'button',
             {
@@ -1013,6 +1036,8 @@ window.__ModuleLoader__.load({
         h('div', { className: 'bm-menu-backdrop', onClick: onClose, onContextMenu: (e) => { e.preventDefault(); onClose(); } }),
         h('div', { className: 'bm-menu', style: { left: Math.max(8, left), top: Math.max(8, top) }, onContextMenu: (e) => e.preventDefault() },
           h('div', { className: 'head' }, cleanText(item.title) || linkHost(item.title) || '（无标题）'),
+          h('button', { className: 'urlline', title: '点一下复制链接', onClick: action('copy') },
+            icon('link', 11), h('span', null, linkHost(item.url) + shortPath(item.url))),
           h('button', { onClick: action('open') }, icon('external', 13), '打开原文', h('span', { className: 'hint' }, '单击卡片同效')),
           h('button', { onClick: action('detail') }, icon('doc', 13), '详情 / 备注 / 标签'),
           h('div', { className: 'sep' }),
