@@ -1,0 +1,8 @@
+node_modules/
+.DS_Store
+*.local
+
+# 个人内容：这里存的是真实的收藏、截图、笔记，不外传
+screenshots/
+memory/
+归纳-*.md

@@ -1,0 +1,4 @@
+- insert:
+    - id: dsh-bookmarks
+      name: '@local/dsh-bookmarks'
+      config: {}
