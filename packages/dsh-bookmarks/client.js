@@ -1688,7 +1688,8 @@ window.__ModuleLoader__.load({
       // 免得为了一个按钮改动 inject 形态、把整个 UI 的激活条件绑死。
       // layout 必须显式声明：客户端给插件的是受限 ctx（只有 fiber + 注入的服务），
       // 不声明就拿不到 layout，退出按钮会一直报 no-layout-service。
-      inject: ['slots', 'layout'],
+      // 写成 optional —— 万一某个版本没有 layout 服务，插件也不会卡在 pending 里不挂载。
+      inject: { slots: { required: true }, layout: { required: false } },
       apply(ctx) {
         clientCtx = ctx;
         let slots = ctx && ctx.slots;

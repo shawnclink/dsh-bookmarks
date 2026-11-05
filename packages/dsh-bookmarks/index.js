@@ -1869,7 +1869,7 @@ function registerTools(ctx, hub) {
 // 插件被禁用再启用时，旧实例可能还没被销毁，路由和工具就会撞名。
 // globalThis 上的寄存器跨模块实例存活，先把上一份清掉再用 ctx.effect 挂接
 // （ctx.effect 是 Cordis 的自动销毁机制，fiber 一停就回收）。
-const BUILD = 'opencli-5'
+const BUILD = 'opencli-6'
 const ROUTES = (globalThis.__dshBookmarksRoutes ??= new Map())
 
 function releaseStale() {
