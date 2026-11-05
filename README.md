@@ -63,11 +63,13 @@ npm install -g --allow-scripts=@jackwener/opencli @jackwener/opencli@latest
 opencli doctor          # 要看到 extensionConnected: true
 ```
 
-把包目录装成 DSH 插件：
+装进 DSH：
 
+```bash
+dsh plugin add github:shawnclink/dsh-bookmarks#path:/packages/dsh-bookmarks
 ```
-plugin_manager(action: "install_bundle", target: "/绝对路径/packages/dsh-bookmarks")
-```
+
+或者在面板里：`plugin_manager(action: "install_bundle", target: "/绝对路径/packages/dsh-bookmarks")`。
 
 左侧栏出现书签图标即可。改完代码不用重启 app：把插件 disable → enable 一次，Host 和 Client 两半一起热重载。
 

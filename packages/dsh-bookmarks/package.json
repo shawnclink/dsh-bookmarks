@@ -1,9 +1,16 @@
 {
-  "name": "@local/dsh-bookmarks",
-  "version": "0.1.0",
-  "private": true,
+  "name": "@shawnclink/dsh-bookmarks",
+  "version": "1.0.0",
   "type": "module",
-  "description": "全平台收藏夹中枢：X / YouTube / Reddit / Bilibili / 知乎 / 小红书 的收藏、稍后再看、Saved 统一到一处",
+  "license": "MIT",
+  "description": "六个收藏夹（X / YouTube / Reddit / Bilibili / 知乎 / 小红书）汇总到 DeepSeek Harness 一个面板：按平台角色看、按「躺了多久」清、一键导出到 Obsidian / 提醒事项 / 日历。",
+  "keywords": ["dsh-plugin", "bookmarks", "deepseek", "harness", "obsidian", "readlater"],
+  "author": "shawnclink",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shawnclink/dsh-bookmarks.git",
+    "directory": "packages/dsh-bookmarks"
+  },
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",

@@ -83,7 +83,7 @@ const DEFAULT_SETTINGS = {
     zhihu: true,
     xiaohongshu: false,
   },
-  limits: { x: 300, youtube: 100, reddit: 50, bilibili: 600, zhihu: 20, xiaohongshu: 120 },
+  limits: { x: 300, youtube: 100, reddit: 50, bilibili: 600, zhihu: 500, xiaohongshu: 120 },
   bilibiliMaxFolders: 20,
   timeoutMs: 180000,
   // 零摩擦那几条：导出到哪、提醒进哪个列表、日历放哪个日历、多久自己跑一次。
@@ -535,7 +535,14 @@ class Store {
             ...DEFAULT_SETTINGS,
             ...(parsed.settings || {}),
             enabled: { ...DEFAULT_SETTINGS.enabled, ...(parsed.settings?.enabled || {}) },
-            limits: { ...DEFAULT_SETTINGS.limits, ...(parsed.settings?.limits || {}) },
+            limits: (() => {
+              const merged = { ...DEFAULT_SETTINGS.limits, ...(parsed.settings?.limits || {}) }
+              // 老 state.json 里存着早期的小额度（知乎 20），会把分页直接截断 —— 只升不降。
+              for (const [key, value] of Object.entries(DEFAULT_SETTINGS.limits)) {
+                merged[key] = Math.max(Number(merged[key]) || 0, Number(value) || 0)
+              }
+              return merged
+            })(),
             roles: { ...DEFAULT_SETTINGS.roles, ...(parsed.settings?.roles || {}) },
             obsidianVault: parsed.settings?.obsidianVault ?? DEFAULT_SETTINGS.obsidianVault,
             obsidianFolder: parsed.settings?.obsidianFolder ?? DEFAULT_SETTINGS.obsidianFolder,
@@ -870,42 +877,52 @@ async function readBilibili(ctx, { limit, settings }) {
 }
 
 async function readZhihu(ctx, { limit, settings }) {
-  const listed = await runCli(
-    BINS.opencli(),
+  const cap = Number(settings.limits?.zhihu) || limit || 500
+  const pageSize = 20
+
+  // 收藏夹列表：这个命令没有 --offset，一次最多 20 个，够用（他只有 3 个夹）。
+  const listed = await runOpencli(
     ['zhihu', 'collections', '-f', 'json', '--limit', '20'],
-    { timeout: settings.timeoutMs },
+    'opencli zhihu collections',
+    settings,
   )
-  const json = parseCliJson(listed, 'opencli zhihu collections')
-  const collections = (findRows(json) || [])
+  const collections = (findRows(listed) || [])
     .map((row) => ({
       id: pick(row, ['collection_id', 'id']),
       title: pick(row, ['title', 'name']),
       count: Number(pick(row, ['item_count', 'count']) || 0),
     }))
     .filter((row) => row.id != null)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, settings.zhihuMaxCollections || 8)
 
   const rows = []
-  for (const collection of collections) {
-    const listedItems = await runCli(
-      BINS.opencli(),
-      ['zhihu', 'collection', String(collection.id), '-f', 'json', '--limit', '20'],
-      { timeout: settings.timeoutMs },
-    )
-    let itemJson
-    try {
-      itemJson = parseCliJson(listedItems, `opencli zhihu collection ${collection.id}`)
-    } catch {
-      continue
+  const seen = new Set()
+  for (const collection of collections.slice(0, Number(settings.zhihuMaxCollections) || 30)) {
+    for (let offset = 0; offset < cap; offset += pageSize) {
+      let page
+      try {
+        page = await runOpencli(
+          ['zhihu', 'collection', String(collection.id), '-f', 'json', '--limit', String(pageSize), '--offset', String(offset)],
+          `opencli zhihu collection ${collection.id}`,
+          settings,
+        )
+      } catch {
+        break
+      }
+      const items = findRows(page) || []
+      if (items.length === 0) break
+      for (const row of items) {
+        const mapped = genericRow(row)
+        if (!mapped.url || seen.has(mapped.url)) continue
+        seen.add(mapped.url)
+        rows.push({ ...mapped, meta: { folder: collection.title } })
+        if (rows.length >= cap) break
+      }
+      if (items.length < pageSize || rows.length >= cap) break
     }
-    const items = findRows(itemJson) || []
-    for (const row of items) {
-      const mapped = genericRow(row)
-      rows.push({ ...mapped, meta: { folder: collection.title } })
-    }
-    if (rows.length >= limit) break
+    if (rows.length >= cap) break
   }
+
+  if (rows.length === 0) throw new SourceError('parse', '知乎一个收藏夹都没拉到条目', '')
   return { folder: '收藏夹', rows }
 }
 
@@ -1171,6 +1188,8 @@ class Hub {
     this.emit()
 
     const credentials = await this.credentials()
+    // 这一轮新进来的条目，收尾时写进 inbox/YYYY-MM-DD.md，给「零操作」那条线用。
+    const freshAll = []
 
     for (const platform of targets) {
       const reader = READERS[platform]
@@ -1850,7 +1869,7 @@ function registerTools(ctx, hub) {
 // 插件被禁用再启用时，旧实例可能还没被销毁，路由和工具就会撞名。
 // globalThis 上的寄存器跨模块实例存活，先把上一份清掉再用 ctx.effect 挂接
 // （ctx.effect 是 Cordis 的自动销毁机制，fiber 一停就回收）。
-const BUILD = 'opencli-2'
+const BUILD = 'opencli-5'
 const ROUTES = (globalThis.__dshBookmarksRoutes ??= new Map())
 
 function releaseStale() {
