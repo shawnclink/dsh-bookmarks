@@ -33,7 +33,7 @@ window.__ModuleLoader__.load({
 
     const FIX = {
       auth: '在 Chrome 里重新登录这个平台，扩展会自动拿到新 cookie',
-      browser: '装 opencli 的 Chrome 扩展（opencli doctor 看状态）',
+      browser: '确保 Chrome 开着，再跑一次 opencli daemon restart',
       tool: '本机没装这个平台的 CLI',
       timeout: '拉取超时，稍后重试',
       parse: '返回格式变了，需要更新解析规则',

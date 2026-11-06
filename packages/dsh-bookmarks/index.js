@@ -372,8 +372,33 @@ function parseCliJson(result, label) {
     throw new SourceError('auth', '需要登录')
   }
   const tail = combined.split('\n').filter(Boolean).slice(-3).join(' / ')
+  // 页面上什么都没渲染出来时 opencli 会抛 scrollHeight / null 这类空指针，
+  // 那不是解析问题，是浏览器那条链路断了。
+  if (/scrollHeight|Cannot read properties of null|Cannot read properties of undefined/i.test(combined)) {
+    throw new SourceError('browser', '页面没加载出来（浏览器链路断了）', combined.slice(0, 2000))
+  }
   throw new SourceError('parse', `${label} 输出解析不了${tail ? `：${tail}` : ''}`, combined.slice(0, 2000))
 }
+
+// 扩展掉线时 opencli 不是报错，而是每条命令都挂到超时 —— 六个平台各等一遍
+// 就是十几分钟的假死。所以每轮同步先问一次 doctor：桥断了就当场说清楚。
+async function bridgeStatus(settings) {
+  const result = await runCli(BINS.opencli(), ['doctor'], {
+    timeout: Math.min(Number(settings.timeoutMs) || 180000, 20000),
+  })
+  if (result.spawnError) return { ok: false, reason: `opencli 跑不起来：${result.spawnError}` }
+  if (result.timedOut) return { ok: false, reason: 'opencli doctor 超时，守护进程可能卡住了' }
+  const json = extractJson(result.stdout) ?? extractJson(result.stderr)
+  const data = json?.data ?? json
+  if (!data || typeof data !== 'object') return { ok: false, reason: 'opencli doctor 没有返回可读状态' }
+  if (data.daemonRunning === false) return { ok: false, reason: 'opencli 守护进程没在跑' }
+  if (data.extensionConnected !== true) {
+    return { ok: false, reason: 'Chrome 扩展没连上（opencli 拿不到浏览器会话）' }
+  }
+  return { ok: true, data }
+}
+
+const BRIDGE_HINT = '点这里的话：确保 Chrome 开着，然后跑一次 opencli daemon restart；扩展图标变亮再点同步。'
 
 // opencli 走 Browser Bridge：复用浏览器里已登录的会话，不碰磁盘上的 cookie 文件。
 // 六个平台都有命令，所以它是首选通道；旧 CLI 只当兜底。
@@ -1190,6 +1215,26 @@ class Hub {
     const credentials = await this.credentials()
     // 这一轮新进来的条目，收尾时写进 inbox/YYYY-MM-DD.md，给「零操作」那条线用。
     const freshAll = []
+
+    // 所有采集都走 opencli 的浏览器桥。桥断了就让六个平台一起当场失败并给出
+    // 同一个可执行的原因，而不是各自挂到超时、看起来像「网站全挂了」。
+    const bridge = await bridgeStatus(settings)
+    if (!bridge.ok) {
+      const message = `${bridge.reason}。${BRIDGE_HINT}`
+      for (const platform of targets) {
+        this.progress[platform] = { status: 'error', code: 'browser', message }
+        this.markSource(platform, {
+          status: 'error',
+          lastRun: new Date().toISOString(),
+          errorCode: 'browser',
+          lastError: message,
+        })
+      }
+      this.syncing = false
+      await this.store.save()
+      this.emit()
+      return { started: true, added: 0, blocked: 'browser' }
+    }
 
     for (const platform of targets) {
       const reader = READERS[platform]
